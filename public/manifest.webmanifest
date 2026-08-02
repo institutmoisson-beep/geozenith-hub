@@ -1,0 +1,12 @@
+{
+  "name": "MSN Tracker by Institut Moisson",
+  "short_name": "MSN Tracker",
+  "description": "Plateforme de tracking GPS de flotte en temps réel.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#1a1a14",
+  "theme_color": "#ff8e42",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
