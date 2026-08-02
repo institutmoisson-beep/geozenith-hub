@@ -113,9 +113,6 @@ export type Database = {
       integration_settings: {
         Row: {
           alert_speed_kmh: number
-          traccar_token: string | null
-          traccar_url: string | null
-          traccar_username: string | null
           updated_at: string
           user_id: string
           whatsapp_enabled: boolean
@@ -123,9 +120,6 @@ export type Database = {
         }
         Insert: {
           alert_speed_kmh?: number
-          traccar_token?: string | null
-          traccar_url?: string | null
-          traccar_username?: string | null
           updated_at?: string
           user_id: string
           whatsapp_enabled?: boolean
@@ -133,13 +127,58 @@ export type Database = {
         }
         Update: {
           alert_speed_kmh?: number
-          traccar_token?: string | null
-          traccar_url?: string | null
-          traccar_username?: string | null
           updated_at?: string
           user_id?: string
           whatsapp_enabled?: boolean
           whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          auto_sync_enabled: boolean
+          auto_sync_interval_minutes: number
+          default_alert_speed_kmh: number
+          id: boolean
+          traccar_token: string | null
+          traccar_url: string | null
+          traccar_username: string | null
+          updated_at: string
+          updated_by: string | null
+          whatsapp_alert_number: string | null
+          whatsapp_enabled: boolean
+          whatsapp_instance_token: string | null
+          whatsapp_provider_url: string | null
+        }
+        Insert: {
+          auto_sync_enabled?: boolean
+          auto_sync_interval_minutes?: number
+          default_alert_speed_kmh?: number
+          id?: boolean
+          traccar_token?: string | null
+          traccar_url?: string | null
+          traccar_username?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp_alert_number?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_instance_token?: string | null
+          whatsapp_provider_url?: string | null
+        }
+        Update: {
+          auto_sync_enabled?: boolean
+          auto_sync_interval_minutes?: number
+          default_alert_speed_kmh?: number
+          id?: boolean
+          traccar_token?: string | null
+          traccar_url?: string | null
+          traccar_username?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp_alert_number?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_instance_token?: string | null
+          whatsapp_provider_url?: string | null
         }
         Relationships: []
       }
@@ -443,6 +482,33 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      admin_list_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string | null
+          full_name: string | null
+          company: string | null
+          phone: string | null
+          roles: Database["public"]["Enums"]["app_role"][] | null
+          vehicle_count: number
+          plan: string | null
+          status: string | null
+          created_at: string
+        }[]
+      }
+      admin_set_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _grant: boolean
+        }
+        Returns: undefined
       }
     }
     Enums: {
