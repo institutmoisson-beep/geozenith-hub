@@ -27,11 +27,11 @@ export const Route = createFileRoute("/")({
         content:
           "MSN Tracker by Institut Moisson : suivi GPS temps réel, géofencing, alertes WhatsApp, rapports PDF et facturation pour votre flotte.",
       },
-      { property: "og:title", content: "MSN Tracker — Plateforme GPS de flotte premium" },
+      { property: "og:title", content: "MSN Tracker — Plateforme GPS de flotte | Institut Moisson" },
       {
         property: "og:description",
         content:
-          "Suivi GPS temps réel, géofencing, alertes et rapports pour gérer toute votre flotte en un seul endroit.",
+          "MSN Tracker by Institut Moisson : suivi GPS temps réel, géofencing, alertes WhatsApp, rapports PDF et facturation pour votre flotte.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

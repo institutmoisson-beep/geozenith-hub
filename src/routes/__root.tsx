@@ -79,21 +79,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#ff8e42" },
-      { title: "MSN Tracker — Suivi GPS de flotte premium" },
+      { title: "MSN Tracker — Plateforme GPS de flotte | Institut Moisson" },
       {
         name: "description",
         content:
-          "MSN Tracker by Institut Moisson : suivi GPS temps réel, géofencing, alertes et rapports pour votre flotte.",
+          "MSN Tracker by Institut Moisson : suivi GPS temps réel, géofencing, alertes WhatsApp, rapports PDF et facturation pour votre flotte.",
       },
       { name: "author", content: "Institut Moisson" },
-      { property: "og:title", content: "MSN Tracker — Suivi GPS de flotte premium" },
+      { property: "og:title", content: "MSN Tracker — Plateforme GPS de flotte | Institut Moisson" },
       {
         property: "og:description",
-        content: "Suivi GPS temps réel, géofencing, alertes et rapports pour votre flotte.",
+        content: "MSN Tracker by Institut Moisson : suivi GPS temps réel, géofencing, alertes WhatsApp, rapports PDF et facturation pour votre flotte.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "MSN Tracker — Plateforme GPS de flotte | Institut Moisson" },
+      { name: "twitter:description", content: "MSN Tracker by Institut Moisson : suivi GPS temps réel, géofencing, alertes WhatsApp, rapports PDF et facturation pour votre flotte." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c438689d-7e29-42df-a87e-d698c2227723" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c438689d-7e29-42df-a87e-d698c2227723" },
     ],
     links: [
       {
