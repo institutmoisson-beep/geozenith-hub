@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useIsAdmin } from "@/hooks/useMsnData";
+import { NotificationBell } from "@/components/app/NotificationBell";
 import logo from "@/assets/msn-tracker-logo.png";
 
 const NAV = [
@@ -29,7 +30,7 @@ const NAV = [
   { to: "/fleet", label: "Flotte", icon: CarFront },
   { to: "/history", label: "Historique", icon: RouteIcon },
   { to: "/geofences", label: "Géofencing", icon: Radar },
-  { to: "/alerts", label: "Alertes", icon: BellRing },
+  { to: "/alerts", label: "Notifications", icon: BellRing },
   { to: "/reports", label: "Rapports PDF", icon: FileText },
   { to: "/billing", label: "Facturation", icon: CreditCard },
   { to: "/settings", label: "Paramètres", icon: Settings },
@@ -127,11 +128,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
       )}
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl lg:hidden">
-          <button onClick={() => setOpen(true)} aria-label="Ouvrir le menu">
-            <Menu className="h-5 w-5" />
-          </button>
-          <span className="font-display font-bold">MSN Tracker</span>
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl">
+          <div className="flex items-center gap-3 lg:hidden">
+            <button onClick={() => setOpen(true)} aria-label="Ouvrir le menu">
+              <Menu className="h-5 w-5" />
+            </button>
+            <span className="font-display font-bold">MSN Tracker</span>
+          </div>
+          <div className="hidden lg:block" />
+          <NotificationBell />
         </header>
         <main className="mx-auto max-w-7xl p-4 md:p-6">{children}</main>
       </div>
