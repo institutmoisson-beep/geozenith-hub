@@ -151,6 +151,7 @@ export function useSystemSettings() {
       if (error) throw new Error(error.message);
       return data as SystemSettings | null;
     },
+    refetchInterval: 15000,
   });
 }
 
