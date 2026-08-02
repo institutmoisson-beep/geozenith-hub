@@ -14,7 +14,7 @@ export function Header() {
         <a href="#top" className="flex items-center gap-3">
           <img src={logo} alt="Logo MSN Tracker" width={40} height={40} className="h-10 w-10" />
           <span className="leading-tight">
-            <span className="block font-display text-lg font-700 tracking-tight">MSN Tracker</span>
+            <span className="block font-display text-lg font-bold tracking-tight">MSN Tracker</span>
             <span className="block text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               by Institut Moisson
             </span>
