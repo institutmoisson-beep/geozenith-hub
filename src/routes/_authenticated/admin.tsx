@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   BellRing,
+  BrainCircuit,
   CarFront,
   CheckCircle2,
   Clock,
@@ -146,6 +147,9 @@ function SystemSettingsTab() {
     auto_sync_enabled: false,
     auto_sync_interval_minutes: "5",
     sync_function_url: "",
+    ai_enabled: false,
+    ollama_url: "",
+    ollama_model: "llama3",
   });
 
   useEffect(() => {
@@ -162,6 +166,9 @@ function SystemSettingsTab() {
         auto_sync_enabled: settings.auto_sync_enabled,
         auto_sync_interval_minutes: String(settings.auto_sync_interval_minutes ?? 5),
         sync_function_url: settings.sync_function_url ?? "",
+        ai_enabled: settings.ai_enabled ?? false,
+        ollama_url: settings.ollama_url ?? "",
+        ollama_model: settings.ollama_model ?? "llama3",
       });
     }
   }, [settings]);
@@ -182,6 +189,9 @@ function SystemSettingsTab() {
       auto_sync_enabled: form.auto_sync_enabled,
       auto_sync_interval_minutes: Number(form.auto_sync_interval_minutes) || 5,
       sync_function_url: form.sync_function_url || null,
+      ai_enabled: form.ai_enabled,
+      ollama_url: form.ollama_url || null,
+      ollama_model: form.ollama_model || "llama3",
       updated_by: auth.user!.id,
     });
     if (error) {
@@ -338,6 +348,53 @@ function SystemSettingsTab() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BrainCircuit className="h-4 w-4" /> Analyse IA (Ollama)
+          </CardTitle>
+          <CardDescription>
+            Serveur LLaMA 3 auto-hébergé pour l'analyse de conduite et la détection d'anomalies.
+            Aucune donnée n'est envoyée à un tiers externe.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={save} className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1.5 md:col-span-1">
+              <Label htmlFor="s-ollama-url">URL du serveur Ollama</Label>
+              <Input
+                id="s-ollama-url"
+                placeholder="https://ollama.example.com"
+                value={form.ollama_url}
+                onChange={(e) => setForm({ ...form, ollama_url: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5 md:col-span-1">
+              <Label htmlFor="s-ollama-model">Modèle</Label>
+              <Input
+                id="s-ollama-model"
+                placeholder="llama3"
+                value={form.ollama_model}
+                onChange={(e) => setForm({ ...form, ollama_model: e.target.value })}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5 md:col-span-2">
+              <Label htmlFor="s-ai-enabled" className="cursor-pointer text-sm font-normal">
+                Activer l'analyse IA pour tous les comptes
+              </Label>
+              <Switch
+                id="s-ai-enabled"
+                checked={form.ai_enabled}
+                onCheckedChange={(v) => setForm({ ...form, ai_enabled: v })}
+              />
+            </div>
+            <Button type="submit" className="md:col-span-2">
+              Enregistrer
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
