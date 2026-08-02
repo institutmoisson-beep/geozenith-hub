@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import logo from "@/assets/msn-tracker-logo.png";
 
 const links = [
@@ -31,12 +32,12 @@ export function Header() {
             </a>
           ))}
         </nav>
-        <a
-          href="#contact"
+        <Link
+          to="/auth"
           className="rounded-full bg-gradient-brand px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03]"
         >
-          Demander une démo
-        </a>
+          Espace client
+        </Link>
       </div>
     </header>
   );
