@@ -13,12 +13,14 @@ import {
   Radar,
   Route as RouteIcon,
   Settings,
+  ShieldCheck,
   X,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useIsAdmin } from "@/hooks/useMsnData";
 import logo from "@/assets/msn-tracker-logo.png";
 
 const NAV = [
@@ -38,6 +40,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data: isAdmin } = useIsAdmin();
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -89,6 +92,22 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              onClick={() => setOpen(false)}
+              className={cn(
+                "mt-3 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2.5 text-sm font-semibold transition-colors",
+                pathname.startsWith("/admin")
+                  ? "bg-gradient-brand text-primary-foreground"
+                  : "text-primary hover:bg-primary/20",
+              )}
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Administration
+            </Link>
+          )}
         </nav>
 
         <div className="border-t border-border p-3">
