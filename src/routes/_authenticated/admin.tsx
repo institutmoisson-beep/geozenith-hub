@@ -5,18 +5,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   BellRing,
   CarFront,
+  CheckCircle2,
+  Clock,
   CreditCard,
   FileText,
+  KeyRound,
   RefreshCw,
   Server,
   ShieldCheck,
   Trash2,
   Users,
+  XCircle,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/app/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
-import { syncTraccar } from "@/lib/tracking.functions";
 import {
   useAdminAlerts,
   useAdminGeofences,
@@ -25,6 +28,7 @@ import {
   useAdminUsers,
   useAdminVehicles,
   useSystemSettings,
+  type SystemSettings,
 } from "@/hooks/useMsnData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -129,6 +133,7 @@ function SystemSettingsTab() {
   const { data: settings } = useSystemSettings();
   const qc = useQueryClient();
   const [syncing, setSyncing] = useState(false);
+  const [rotating, setRotating] = useState(false);
   const [form, setForm] = useState({
     traccar_url: "",
     traccar_username: "",
@@ -140,6 +145,7 @@ function SystemSettingsTab() {
     default_alert_speed_kmh: "90",
     auto_sync_enabled: false,
     auto_sync_interval_minutes: "5",
+    sync_function_url: "",
   });
 
   useEffect(() => {
@@ -155,6 +161,7 @@ function SystemSettingsTab() {
         default_alert_speed_kmh: String(settings.default_alert_speed_kmh ?? 90),
         auto_sync_enabled: settings.auto_sync_enabled,
         auto_sync_interval_minutes: String(settings.auto_sync_interval_minutes ?? 5),
+        sync_function_url: settings.sync_function_url ?? "",
       });
     }
   }, [settings]);
@@ -174,6 +181,7 @@ function SystemSettingsTab() {
       default_alert_speed_kmh: Number(form.default_alert_speed_kmh) || 90,
       auto_sync_enabled: form.auto_sync_enabled,
       auto_sync_interval_minutes: Number(form.auto_sync_interval_minutes) || 5,
+      sync_function_url: form.sync_function_url || null,
       updated_by: auth.user!.id,
     });
     if (error) {
@@ -187,14 +195,32 @@ function SystemSettingsTab() {
   async function runSync() {
     setSyncing(true);
     try {
-      const result = await syncTraccar({ data: undefined });
-      toast.success(`Synchronisation : ${result.devices} boîtier(s), ${result.alerts} alerte(s).`);
+      const { data, error } = await supabase.functions.invoke("sync-traccar", {
+        body: { source: "manual" },
+      });
+      if (error) throw error;
+      toast.success(
+        `Synchronisation : ${data.devices} boîtier(s), ${data.updated} véhicule(s), ${data.alerts} alerte(s).`,
+      );
       qc.invalidateQueries();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Échec de la synchronisation");
     } finally {
       setSyncing(false);
     }
+  }
+
+  async function rotateSecret() {
+    setRotating(true);
+    const { error } = await supabase.rpc("admin_rotate_cron_secret");
+    setRotating(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(
+      "Secret cron régénéré — la synchro automatique continue de fonctionner sans intervention.",
+    );
   }
 
   return (
@@ -315,43 +341,124 @@ function SystemSettingsTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Synchronisation GPS</CardTitle>
+          <CardTitle>Synchronisation GPS automatique</CardTitle>
           <CardDescription>
-            Déclenchez une synchronisation manuelle ou activez le rafraîchissement automatique.
+            Un job planifié (toutes les minutes) vérifie s'il est temps de synchroniser, puis
+            appelle une fonction Edge Supabase indépendante du serveur applicatif — la flotte se met
+            à jour toute seule, sans bouton à cliquer.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-wrap items-center gap-4">
-          <Button className="gap-2" onClick={runSync} disabled={syncing}>
-            <RefreshCw className="h-4 w-4" />{" "}
-            {syncing ? "Synchronisation…" : "Synchroniser maintenant"}
-          </Button>
-          <div className="flex items-center gap-2">
-            <Switch
-              id="s-auto"
-              checked={form.auto_sync_enabled}
-              onCheckedChange={(v) => setForm({ ...form, auto_sync_enabled: v })}
-            />
-            <Label htmlFor="s-auto" className="cursor-pointer text-sm font-normal">
-              Synchronisation automatique
-            </Label>
+        <CardContent className="space-y-4">
+          <SyncStatusBanner settings={settings} />
+
+          <div className="flex flex-wrap items-center gap-4">
+            <Button className="gap-2" onClick={runSync} disabled={syncing}>
+              <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Synchronisation…" : "Forcer une synchro maintenant"}
+            </Button>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="s-auto"
+                checked={form.auto_sync_enabled}
+                onCheckedChange={(v) => setForm({ ...form, auto_sync_enabled: v })}
+              />
+              <Label htmlFor="s-auto" className="cursor-pointer text-sm font-normal">
+                Synchronisation automatique
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="s-interval" className="text-sm text-muted-foreground">
+                Toutes les
+              </Label>
+              <Input
+                id="s-interval"
+                className="w-20"
+                value={form.auto_sync_interval_minutes}
+                onChange={(e) => setForm({ ...form, auto_sync_interval_minutes: e.target.value })}
+              />
+              <span className="text-sm text-muted-foreground">min</span>
+            </div>
+            <Button variant="secondary" onClick={save}>
+              Enregistrer
+            </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="s-interval" className="text-sm text-muted-foreground">
-              Toutes les
-            </Label>
-            <Input
-              id="s-interval"
-              className="w-20"
-              value={form.auto_sync_interval_minutes}
-              onChange={(e) => setForm({ ...form, auto_sync_interval_minutes: e.target.value })}
-            />
-            <span className="text-sm text-muted-foreground">min</span>
+
+          <div className="space-y-1.5 border-t border-border pt-4">
+            <Label htmlFor="s-fn-url">URL de la fonction Edge de synchronisation</Label>
+            <div className="flex gap-2">
+              <Input
+                id="s-fn-url"
+                className="font-mono text-xs"
+                value={form.sync_function_url}
+                onChange={(e) => setForm({ ...form, sync_function_url: e.target.value })}
+              />
+              <Button type="button" variant="outline" onClick={save}>
+                Enregistrer
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Pré-remplie automatiquement pour ce projet Supabase. Ne la modifiez que si vous
+              redéployez la fonction <code>sync-traccar</code> ailleurs.
+            </p>
           </div>
-          <Button variant="secondary" onClick={save}>
-            Enregistrer l'intervalle
-          </Button>
+
+          <div className="flex items-center justify-between border-t border-border pt-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <KeyRound className="h-4 w-4" /> Secret interne cron ↔ fonction Edge
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={rotateSecret}
+              disabled={rotating}
+            >
+              {rotating ? "Régénération…" : "Régénérer le secret"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function SyncStatusBanner({ settings }: { settings: SystemSettings | null | undefined }) {
+  if (!settings?.last_sync_status) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">
+        <Clock className="h-4 w-4" /> Aucune synchronisation effectuée pour l'instant.
+      </div>
+    );
+  }
+
+  const map = {
+    running: {
+      icon: RefreshCw,
+      className: "text-blue-500 animate-spin",
+      label: "Synchronisation en cours…",
+    },
+    success: {
+      icon: CheckCircle2,
+      className: "text-emerald-500",
+      label: settings.last_sync_summary ?? "Dernière synchro réussie",
+    },
+    error: {
+      icon: XCircle,
+      className: "text-destructive",
+      label: settings.last_sync_error ?? "Échec de la dernière synchro",
+    },
+  } as const;
+
+  const state = map[settings.last_sync_status as keyof typeof map] ?? map.success;
+  const Icon = state.icon;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm">
+      <Icon className={`h-4 w-4 shrink-0 ${state.className}`} />
+      <span>{state.label}</span>
+      {settings.last_sync_at && (
+        <span className="text-xs text-muted-foreground">— {formatDate(settings.last_sync_at)}</span>
+      )}
     </div>
   );
 }
