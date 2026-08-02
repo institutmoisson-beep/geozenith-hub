@@ -13,6 +13,7 @@ export type Profile = Tables<"profiles">;
 export type Settings = Tables<"integration_settings">;
 export type SystemSettings = Tables<"system_settings">;
 export type UserRole = Tables<"user_roles">;
+export type AiInsight = Tables<"ai_insights">;
 
 function unwrap<T>({ data, error }: { data: T | null; error: { message: string } | null }) {
   if (error) throw new Error(error.message);
@@ -236,5 +237,61 @@ export function useAdminInvoices() {
       unwrap<Invoice[]>(
         await supabase.from("invoices").select("*").order("issued_at", { ascending: false }),
       ),
+  });
+}
+
+// =======================================================================
+// Notifications (boîte de notifications interne, basée sur `alerts`)
+// =======================================================================
+
+/** Nombre de notifications non lues de l'utilisateur connecté. */
+export function useUnreadNotificationsCount() {
+  return useQuery({
+    queryKey: ["notifications-unread-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("alerts")
+        .select("id", { count: "exact", head: true })
+        .eq("is_read", false);
+      if (error) throw new Error(error.message);
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+}
+
+/** Les N notifications les plus récentes pour le panneau cloche. */
+export function useRecentNotifications(limit = 8) {
+  return useQuery({
+    queryKey: ["notifications-recent", limit],
+    queryFn: async () =>
+      unwrap<Alert[]>(
+        await supabase
+          .from("alerts")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(limit),
+      ),
+    refetchInterval: 30000,
+  });
+}
+
+// =======================================================================
+// Analyse IA (Ollama)
+// =======================================================================
+
+/** Historique des analyses IA pour un véhicule (ou la flotte si undefined). */
+export function useAiInsights(vehicleId?: string) {
+  return useQuery({
+    queryKey: ["ai-insights", vehicleId ?? "fleet"],
+    queryFn: async () => {
+      let q = supabase
+        .from("ai_insights")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      q = vehicleId ? q.eq("vehicle_id", vehicleId) : q.is("vehicle_id", null);
+      return unwrap<AiInsight[]>(await q);
+    },
   });
 }
