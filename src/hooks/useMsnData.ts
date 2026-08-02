@@ -11,6 +11,8 @@ export type Invoice = Tables<"invoices">;
 export type Subscription = Tables<"subscriptions">;
 export type Profile = Tables<"profiles">;
 export type Settings = Tables<"integration_settings">;
+export type SystemSettings = Tables<"system_settings">;
+export type UserRole = Tables<"user_roles">;
 
 function unwrap<T>({ data, error }: { data: T | null; error: { message: string } | null }) {
   if (error) throw new Error(error.message);
@@ -57,7 +59,11 @@ export function useTrips(vehicleId?: string) {
   return useQuery({
     queryKey: ["trips", vehicleId ?? "all"],
     queryFn: async () => {
-      let q = supabase.from("trips").select("*").order("started_at", { ascending: false }).limit(200);
+      let q = supabase
+        .from("trips")
+        .select("*")
+        .order("started_at", { ascending: false })
+        .limit(200);
       if (vehicleId) q = q.eq("vehicle_id", vehicleId);
       return unwrap<Trip[]>(await q);
     },
@@ -116,12 +122,118 @@ export function useSettings() {
   return useQuery({
     queryKey: ["settings"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("integration_settings")
-        .select("*")
-        .maybeSingle();
+      const { data, error } = await supabase.from("integration_settings").select("*").maybeSingle();
       if (error) throw new Error(error.message);
       return data as Settings | null;
     },
+  });
+}
+
+/** L'utilisateur connecté est-il administrateur de la plateforme ? */
+export function useIsAdmin() {
+  return useQuery({
+    queryKey: ["is-admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("is_admin");
+      if (error) throw new Error(error.message);
+      return Boolean(data);
+    },
+    staleTime: 60_000,
+  });
+}
+
+/** Configuration système globale (Traccar / WhatsApp) — admin only. */
+export function useSystemSettings() {
+  return useQuery({
+    queryKey: ["system-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("system_settings").select("*").maybeSingle();
+      if (error) throw new Error(error.message);
+      return data as SystemSettings | null;
+    },
+  });
+}
+
+export type AdminUserRow = {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  company: string | null;
+  phone: string | null;
+  roles: string[] | null;
+  vehicle_count: number | null;
+  plan: string | null;
+  status: string | null;
+  created_at: string | null;
+};
+
+/** Liste de tous les utilisateurs de la plateforme — admin only. */
+export function useAdminUsers() {
+  return useQuery({
+    queryKey: ["admin-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_list_users");
+      if (error) throw new Error(error.message);
+      return (data ?? []) as AdminUserRow[];
+    },
+  });
+}
+
+/** Tous les véhicules, toutes organisations confondues — admin only. */
+export function useAdminVehicles() {
+  return useQuery({
+    queryKey: ["admin-vehicles"],
+    queryFn: async () =>
+      unwrap<Vehicle[]>(
+        await supabase.from("vehicles").select("*").order("created_at", { ascending: false }),
+      ),
+  });
+}
+
+/** Toutes les alertes, toutes organisations confondues — admin only. */
+export function useAdminAlerts(limit = 200) {
+  return useQuery({
+    queryKey: ["admin-alerts", limit],
+    queryFn: async () =>
+      unwrap<Alert[]>(
+        await supabase
+          .from("alerts")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(limit),
+      ),
+  });
+}
+
+/** Toutes les géofences, toutes organisations confondues — admin only. */
+export function useAdminGeofences() {
+  return useQuery({
+    queryKey: ["admin-geofences"],
+    queryFn: async () =>
+      unwrap<Geofence[]>(
+        await supabase.from("geofences").select("*").order("created_at", { ascending: false }),
+      ),
+  });
+}
+
+/** Tous les abonnements — admin only. */
+export function useAdminSubscriptions() {
+  return useQuery({
+    queryKey: ["admin-subscriptions"],
+    queryFn: async () =>
+      unwrap<Subscription[]>(
+        await supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
+      ),
+  });
+}
+
+/** Toutes les factures — admin only. */
+export function useAdminInvoices() {
+  return useQuery({
+    queryKey: ["admin-invoices"],
+    queryFn: async () =>
+      unwrap<Invoice[]>(
+        await supabase.from("invoices").select("*").order("issued_at", { ascending: false }),
+      ),
   });
 }
