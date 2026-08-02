@@ -41,6 +41,7 @@ function SettingsPage() {
     whatsapp_number: "",
     whatsapp_enabled: true,
     alert_speed_kmh: "90",
+    sound_enabled: true,
   });
   const [prof, setProf] = useState({ full_name: "", company: "", phone: "" });
 
@@ -50,6 +51,7 @@ function SettingsPage() {
         whatsapp_number: settings.whatsapp_number ?? "",
         whatsapp_enabled: settings.whatsapp_enabled ?? true,
         alert_speed_kmh: String(settings.alert_speed_kmh ?? 90),
+        sound_enabled: settings.sound_enabled ?? true,
       });
     }
   }, [settings]);
@@ -72,6 +74,7 @@ function SettingsPage() {
       whatsapp_number: form.whatsapp_number || null,
       whatsapp_enabled: form.whatsapp_enabled,
       alert_speed_kmh: Number(form.alert_speed_kmh) || 90,
+      sound_enabled: form.sound_enabled,
     });
     if (error) {
       toast.error(error.message);
@@ -136,6 +139,16 @@ function SettingsPage() {
                   id="wa-enabled"
                   checked={form.whatsapp_enabled}
                   onCheckedChange={(v) => setForm({ ...form, whatsapp_enabled: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
+                <Label htmlFor="sound-enabled" className="cursor-pointer text-sm font-normal">
+                  Jouer un son à la réception d'une notification
+                </Label>
+                <Switch
+                  id="sound-enabled"
+                  checked={form.sound_enabled}
+                  onCheckedChange={(v) => setForm({ ...form, sound_enabled: v })}
                 />
               </div>
               <div className="space-y-1.5">
