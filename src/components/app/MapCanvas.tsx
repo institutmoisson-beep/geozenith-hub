@@ -7,7 +7,7 @@ const LeafletMap = lazy(() => import("./LeafletMap"));
 
 type Props = ComponentProps<typeof LeafletMapType>;
 
-function Skeleton({ className }: { className?: string }) {
+function Skeleton({ className }: { className?: string | undefined }) {
   return (
     <div
       className={
