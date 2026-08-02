@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_insights: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          model: string | null
+          scope: string
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          scope?: string
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          scope?: string
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_insights_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           created_at: string
@@ -113,6 +151,7 @@ export type Database = {
       integration_settings: {
         Row: {
           alert_speed_kmh: number
+          sound_enabled: boolean
           updated_at: string
           user_id: string
           whatsapp_enabled: boolean
@@ -120,6 +159,7 @@ export type Database = {
         }
         Insert: {
           alert_speed_kmh?: number
+          sound_enabled?: boolean
           updated_at?: string
           user_id: string
           whatsapp_enabled?: boolean
@@ -127,6 +167,7 @@ export type Database = {
         }
         Update: {
           alert_speed_kmh?: number
+          sound_enabled?: boolean
           updated_at?: string
           user_id?: string
           whatsapp_enabled?: boolean
@@ -136,6 +177,7 @@ export type Database = {
       }
       system_settings: {
         Row: {
+          ai_enabled: boolean
           auto_sync_enabled: boolean
           auto_sync_interval_minutes: number
           cron_secret: string | null
@@ -145,6 +187,8 @@ export type Database = {
           last_sync_error: string | null
           last_sync_status: string | null
           last_sync_summary: string | null
+          ollama_model: string
+          ollama_url: string | null
           sync_function_url: string | null
           traccar_token: string | null
           traccar_url: string | null
@@ -157,6 +201,7 @@ export type Database = {
           whatsapp_provider_url: string | null
         }
         Insert: {
+          ai_enabled?: boolean
           auto_sync_enabled?: boolean
           auto_sync_interval_minutes?: number
           cron_secret?: string | null
@@ -166,6 +211,8 @@ export type Database = {
           last_sync_error?: string | null
           last_sync_status?: string | null
           last_sync_summary?: string | null
+          ollama_model?: string
+          ollama_url?: string | null
           sync_function_url?: string | null
           traccar_token?: string | null
           traccar_url?: string | null
@@ -178,6 +225,7 @@ export type Database = {
           whatsapp_provider_url?: string | null
         }
         Update: {
+          ai_enabled?: boolean
           auto_sync_enabled?: boolean
           auto_sync_interval_minutes?: number
           cron_secret?: string | null
@@ -187,6 +235,8 @@ export type Database = {
           last_sync_error?: string | null
           last_sync_status?: string | null
           last_sync_summary?: string | null
+          ollama_model?: string
+          ollama_url?: string | null
           sync_function_url?: string | null
           traccar_token?: string | null
           traccar_url?: string | null
