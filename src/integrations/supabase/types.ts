@@ -138,8 +138,14 @@ export type Database = {
         Row: {
           auto_sync_enabled: boolean
           auto_sync_interval_minutes: number
+          cron_secret: string | null
           default_alert_speed_kmh: number
           id: boolean
+          last_sync_at: string | null
+          last_sync_error: string | null
+          last_sync_status: string | null
+          last_sync_summary: string | null
+          sync_function_url: string | null
           traccar_token: string | null
           traccar_url: string | null
           traccar_username: string | null
@@ -153,8 +159,14 @@ export type Database = {
         Insert: {
           auto_sync_enabled?: boolean
           auto_sync_interval_minutes?: number
+          cron_secret?: string | null
           default_alert_speed_kmh?: number
           id?: boolean
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          last_sync_summary?: string | null
+          sync_function_url?: string | null
           traccar_token?: string | null
           traccar_url?: string | null
           traccar_username?: string | null
@@ -168,8 +180,14 @@ export type Database = {
         Update: {
           auto_sync_enabled?: boolean
           auto_sync_interval_minutes?: number
+          cron_secret?: string | null
           default_alert_speed_kmh?: number
           id?: boolean
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          last_sync_summary?: string | null
+          sync_function_url?: string | null
           traccar_token?: string | null
           traccar_url?: string | null
           traccar_username?: string | null
@@ -508,6 +526,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _grant: boolean
         }
+        Returns: undefined
+      }
+      admin_rotate_cron_secret: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
