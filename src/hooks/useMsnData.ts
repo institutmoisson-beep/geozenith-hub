@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { adminListUsers } from "@/lib/admin.functions";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Vehicle = Tables<"vehicles">;
