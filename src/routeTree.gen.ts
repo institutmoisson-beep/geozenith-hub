@@ -22,6 +22,7 @@ import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMapRouteImport } from './routes/_authenticated/map'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as ApiPublicHooksSyncTraccarRouteImport } from './routes/api/public/hooks/sync-traccar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -87,6 +88,12 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicHooksSyncTraccarRoute =
+  ApiPublicHooksSyncTraccarRouteImport.update({
+    id: '/api/public/hooks/sync-traccar',
+    path: '/api/public/hooks/sync-traccar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/map': typeof AuthenticatedMapRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/hooks/sync-traccar': typeof ApiPublicHooksSyncTraccarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -115,6 +123,7 @@ export interface FileRoutesByTo {
   '/map': typeof AuthenticatedMapRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/hooks/sync-traccar': typeof ApiPublicHooksSyncTraccarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -131,6 +140,7 @@ export interface FileRoutesById {
   '/_authenticated/map': typeof AuthenticatedMapRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/hooks/sync-traccar': typeof ApiPublicHooksSyncTraccarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/map'
     | '/reports'
     | '/settings'
+    | '/api/public/hooks/sync-traccar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/map'
     | '/reports'
     | '/settings'
+    | '/api/public/hooks/sync-traccar'
   id:
     | '__root__'
     | '/'
@@ -176,12 +188,14 @@ export interface FileRouteTypes {
     | '/_authenticated/map'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/api/public/hooks/sync-traccar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksSyncTraccarRoute: typeof ApiPublicHooksSyncTraccarRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -277,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/hooks/sync-traccar': {
+      id: '/api/public/hooks/sync-traccar'
+      path: '/api/public/hooks/sync-traccar'
+      fullPath: '/api/public/hooks/sync-traccar'
+      preLoaderRoute: typeof ApiPublicHooksSyncTraccarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -313,6 +334,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksSyncTraccarRoute: ApiPublicHooksSyncTraccarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

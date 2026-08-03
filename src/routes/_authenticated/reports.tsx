@@ -14,7 +14,8 @@ import {
   useTrips,
   useVehicles,
 } from "@/hooks/useMsnData";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { generateFleetInsight } from "@/lib/ai.functions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildFullReport, buildReport, downloadReport } from "@/lib/pdf";
@@ -242,12 +243,12 @@ function AiInsightsCard({ onGenerated }: { onGenerated: (content: string) => voi
   const qc = useQueryClient();
   const [generating, setGenerating] = useState(false);
   const latest = insights[0];
+  const runInsight = useServerFn(generateFleetInsight);
 
   async function generate() {
     setGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("ai-fleet-insights", { body: {} });
-      if (error) throw error;
+      const data = await runInsight();
       toast.success("Analyse IA générée");
       onGenerated(data.insight.content);
       qc.invalidateQueries({ queryKey: ["ai-insights"] });
