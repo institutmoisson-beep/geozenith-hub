@@ -175,81 +175,6 @@ export type Database = {
         }
         Relationships: []
       }
-      system_settings: {
-        Row: {
-          ai_enabled: boolean
-          auto_sync_enabled: boolean
-          auto_sync_interval_minutes: number
-          cron_secret: string | null
-          default_alert_speed_kmh: number
-          id: boolean
-          last_sync_at: string | null
-          last_sync_error: string | null
-          last_sync_status: string | null
-          last_sync_summary: string | null
-          ollama_model: string
-          ollama_url: string | null
-          sync_function_url: string | null
-          traccar_token: string | null
-          traccar_url: string | null
-          traccar_username: string | null
-          updated_at: string
-          updated_by: string | null
-          whatsapp_alert_number: string | null
-          whatsapp_enabled: boolean
-          whatsapp_instance_token: string | null
-          whatsapp_provider_url: string | null
-        }
-        Insert: {
-          ai_enabled?: boolean
-          auto_sync_enabled?: boolean
-          auto_sync_interval_minutes?: number
-          cron_secret?: string | null
-          default_alert_speed_kmh?: number
-          id?: boolean
-          last_sync_at?: string | null
-          last_sync_error?: string | null
-          last_sync_status?: string | null
-          last_sync_summary?: string | null
-          ollama_model?: string
-          ollama_url?: string | null
-          sync_function_url?: string | null
-          traccar_token?: string | null
-          traccar_url?: string | null
-          traccar_username?: string | null
-          updated_at?: string
-          updated_by?: string | null
-          whatsapp_alert_number?: string | null
-          whatsapp_enabled?: boolean
-          whatsapp_instance_token?: string | null
-          whatsapp_provider_url?: string | null
-        }
-        Update: {
-          ai_enabled?: boolean
-          auto_sync_enabled?: boolean
-          auto_sync_interval_minutes?: number
-          cron_secret?: string | null
-          default_alert_speed_kmh?: number
-          id?: boolean
-          last_sync_at?: string | null
-          last_sync_error?: string | null
-          last_sync_status?: string | null
-          last_sync_summary?: string | null
-          ollama_model?: string
-          ollama_url?: string | null
-          sync_function_url?: string | null
-          traccar_token?: string | null
-          traccar_url?: string | null
-          traccar_username?: string | null
-          updated_at?: string
-          updated_by?: string | null
-          whatsapp_alert_number?: string | null
-          whatsapp_enabled?: boolean
-          whatsapp_instance_token?: string | null
-          whatsapp_provider_url?: string | null
-        }
-        Relationships: []
-      }
       invoices: {
         Row: {
           amount_fcfa: number
@@ -402,6 +327,81 @@ export type Database = {
         }
         Relationships: []
       }
+      system_settings: {
+        Row: {
+          ai_enabled: boolean
+          auto_sync_enabled: boolean
+          auto_sync_interval_minutes: number
+          cron_secret: string | null
+          default_alert_speed_kmh: number
+          id: boolean
+          last_sync_at: string | null
+          last_sync_error: string | null
+          last_sync_status: string | null
+          last_sync_summary: string | null
+          ollama_model: string
+          ollama_url: string | null
+          sync_function_url: string | null
+          traccar_token: string | null
+          traccar_url: string | null
+          traccar_username: string | null
+          updated_at: string
+          updated_by: string | null
+          whatsapp_alert_number: string | null
+          whatsapp_enabled: boolean
+          whatsapp_instance_token: string | null
+          whatsapp_provider_url: string | null
+        }
+        Insert: {
+          ai_enabled?: boolean
+          auto_sync_enabled?: boolean
+          auto_sync_interval_minutes?: number
+          cron_secret?: string | null
+          default_alert_speed_kmh?: number
+          id?: boolean
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          last_sync_summary?: string | null
+          ollama_model?: string
+          ollama_url?: string | null
+          sync_function_url?: string | null
+          traccar_token?: string | null
+          traccar_url?: string | null
+          traccar_username?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp_alert_number?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_instance_token?: string | null
+          whatsapp_provider_url?: string | null
+        }
+        Update: {
+          ai_enabled?: boolean
+          auto_sync_enabled?: boolean
+          auto_sync_interval_minutes?: number
+          cron_secret?: string | null
+          default_alert_speed_kmh?: number
+          id?: boolean
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          last_sync_summary?: string | null
+          ollama_model?: string
+          ollama_url?: string | null
+          sync_function_url?: string | null
+          traccar_token?: string | null
+          traccar_url?: string | null
+          traccar_username?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp_alert_number?: string | null
+          whatsapp_enabled?: boolean
+          whatsapp_instance_token?: string | null
+          whatsapp_provider_url?: string | null
+        }
+        Relationships: []
+      }
       trips: {
         Row: {
           avg_speed: number
@@ -544,6 +544,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_users: {
+        Args: never
+        Returns: {
+          company: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          plan: string
+          roles: Database["public"]["Enums"]["app_role"][]
+          status: string
+          vehicle_count: number
+        }[]
+      }
+      admin_rotate_cron_secret: { Args: never; Returns: undefined }
+      admin_set_role: {
+        Args: {
+          _grant: boolean
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -551,37 +575,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      admin_list_users: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          email: string | null
-          full_name: string | null
-          company: string | null
-          phone: string | null
-          roles: Database["public"]["Enums"]["app_role"][] | null
-          vehicle_count: number
-          plan: string | null
-          status: string | null
-          created_at: string
-        }[]
-      }
-      admin_set_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-          _grant: boolean
-        }
-        Returns: undefined
-      }
-      admin_rotate_cron_secret: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      is_admin: { Args: never; Returns: boolean }
+      trigger_traccar_sync: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "manager" | "user"
