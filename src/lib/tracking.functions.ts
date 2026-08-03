@@ -14,8 +14,12 @@ export const syncTraccar = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { runTraccarSync } = await import("./traccar-sync.server");
 
-    const { data: isAdmin } = await supabase.rpc("is_admin");
-    if (!isAdmin) {
+    const { data: adminRows } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin");
+    if (!adminRows || adminRows.length === 0) {
       throw new Error("Seul un administrateur peut déclencher la synchronisation.");
     }
 

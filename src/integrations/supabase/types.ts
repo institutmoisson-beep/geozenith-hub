@@ -544,21 +544,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_list_users: {
-        Args: never
-        Returns: {
-          company: string
-          created_at: string
-          email: string
-          full_name: string
-          id: string
-          phone: string
-          plan: string
-          roles: Database["public"]["Enums"]["app_role"][]
-          status: string
-          vehicle_count: number
-        }[]
-      }
       admin_rotate_cron_secret: { Args: never; Returns: undefined }
       admin_set_role: {
         Args: {
@@ -568,14 +553,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_admin: { Args: never; Returns: boolean }
       trigger_traccar_sync: { Args: never; Returns: undefined }
     }
     Enums: {

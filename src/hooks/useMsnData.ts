@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { adminListUsers } from "@/lib/admin.functions";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Vehicle = Tables<"vehicles">;
@@ -135,7 +136,15 @@ export function useIsAdmin() {
   return useQuery({
     queryKey: ["is-admin"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("is_admin");
+      const { data: session } = await supabase.auth.getUser();
+      const uid = session.user?.id;
+      if (!uid) return false;
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid)
+        .eq("role", "admin")
+        .maybeSingle();
       if (error) throw new Error(error.message);
       return Boolean(data);
     },
@@ -156,28 +165,13 @@ export function useSystemSettings() {
   });
 }
 
-export type AdminUserRow = {
-  id: string;
-  email: string | null;
-  full_name: string | null;
-  company: string | null;
-  phone: string | null;
-  roles: string[] | null;
-  vehicle_count: number | null;
-  plan: string | null;
-  status: string | null;
-  created_at: string | null;
-};
+export type { AdminUserRow } from "@/lib/admin.functions";
 
 /** Liste de tous les utilisateurs de la plateforme — admin only. */
 export function useAdminUsers() {
   return useQuery({
     queryKey: ["admin-users"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("admin_list_users");
-      if (error) throw new Error(error.message);
-      return (data ?? []) as AdminUserRow[];
-    },
+    queryFn: () => adminListUsers(),
   });
 }
 
