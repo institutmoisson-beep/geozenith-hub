@@ -248,7 +248,7 @@ function AiInsightsCard({ onGenerated }: { onGenerated: (content: string) => voi
   async function generate() {
     setGenerating(true);
     try {
-      const data = await runInsight({ data: {} });
+      const data = await runInsight();
       toast.success("Analyse IA générée");
       onGenerated(data.insight.content);
       qc.invalidateQueries({ queryKey: ["ai-insights"] });
