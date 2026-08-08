@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { fetchTraccar, knotsToKmh } from "./traccar.server";
-import { haversineKm } from "./msn";
+import { isInsideGeofence } from "./msn";
 
 type Client = SupabaseClient<Database>;
 
@@ -114,12 +114,7 @@ export async function runTraccarSync(
 
     for (const fence of geofences ?? []) {
       if (fence.user_id !== vehicle.user_id) continue;
-      const distanceM =
-        haversineKm(
-          { lat: position.latitude, lng: position.longitude },
-          { lat: fence.center_lat, lng: fence.center_lng },
-        ) * 1000;
-      const inside = distanceM <= fence.radius_m;
+      const inside = isInsideGeofence({ lat: position.latitude, lng: position.longitude }, fence);
       if (inside && fence.trigger_type !== "exit") {
         alerts.push({
           user_id: vehicle.user_id,
@@ -135,6 +130,22 @@ export async function runTraccarSync(
 
   if (alerts.length > 0) {
     await supabase.from("alerts").insert(alerts as never);
+
+    // Notifications WhatsApp personnelles (best-effort, ne bloque jamais
+    // la synchro si l'envoi échoue ou si WhatsApp n'est pas configuré).
+    if (settings.whatsapp_enabled) {
+      const { notifyUserWhatsApp } = await import("./whatsapp.server");
+      await Promise.all(
+        alerts.map((a) =>
+          notifyUserWhatsApp(
+            supabase,
+            settings,
+            a["user_id"] as string,
+            `🚨 MSN Tracker\n${a["message"] as string}`,
+          ),
+        ),
+      );
+    }
   }
 
   return { devices: devices.length, updated, created, alerts: alerts.length };
