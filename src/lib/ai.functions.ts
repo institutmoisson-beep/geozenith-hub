@@ -11,8 +11,15 @@ export const generateFleetInsight = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { buildFleetPrompt, askOllama } = await import("./ai.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: settings } = await supabase.from("system_settings").select("*").maybeSingle();
+    // system_settings n'est lisible que par les admins via RLS (RGPD/sécurité) ;
+    // on lit donc la config Ollama avec le client service_role. Les données de
+    // flotte utilisées dans le prompt, elles, restent scopées par RLS via `supabase`.
+    const { data: settings } = await supabaseAdmin
+      .from("system_settings")
+      .select("ai_enabled, ollama_url, ollama_model")
+      .maybeSingle();
     if (!settings?.ai_enabled) {
       throw new Error("L'analyse IA est désactivée par l'administrateur.");
     }
