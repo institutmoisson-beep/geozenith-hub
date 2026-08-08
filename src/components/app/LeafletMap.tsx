@@ -15,9 +15,11 @@ export type MapVehicle = {
 export type MapGeofence = {
   id: string;
   name: string;
-  center_lat: number;
-  center_lng: number;
-  radius_m: number;
+  shape_type: string;
+  center_lat: number | null;
+  center_lng: number | null;
+  radius_m: number | null;
+  points: unknown;
   color: string;
 };
 
@@ -25,6 +27,8 @@ type Props = {
   vehicles?: MapVehicle[];
   geofences?: MapGeofence[];
   track?: Array<{ lat: number; lng: number }>;
+  /** Points du polygone en cours de dessin (mode création de zone). */
+  draftPoints?: Array<{ lat: number; lng: number }> | undefined;
   onMapClick?: (lat: number, lng: number) => void;
   center?: [number, number];
   zoom?: number;
@@ -53,6 +57,7 @@ export default function LeafletMap({
   vehicles = [],
   geofences = [],
   track,
+  draftPoints,
   onMapClick,
   center = [5.3599, -4.0083],
   zoom = 11,
@@ -91,17 +96,56 @@ export default function LeafletMap({
     const bounds: L.LatLngExpression[] = [];
 
     geofences.forEach((g) => {
-      L.circle([g.center_lat, g.center_lng], {
-        radius: g.radius_m,
-        color: g.color,
-        fillColor: g.color,
-        fillOpacity: 0.12,
-        weight: 2,
-      })
-        .bindPopup(`<strong>${g.name}</strong><br/>${g.radius_m} m`)
-        .addTo(layer);
-      bounds.push([g.center_lat, g.center_lng]);
+      if (g.shape_type === "polygon") {
+        const pts = Array.isArray(g.points)
+          ? (g.points as Array<{ lat: number; lng: number }>)
+          : [];
+        if (pts.length < 3) return;
+        const latlngs = pts.map((p) => [p.lat, p.lng] as L.LatLngExpression);
+        L.polygon(latlngs, {
+          color: g.color,
+          fillColor: g.color,
+          fillOpacity: 0.12,
+          weight: 2,
+        })
+          .bindPopup(`<strong>${g.name}</strong><br/>Zone polygonale (${pts.length} points)`)
+          .addTo(layer);
+        bounds.push(...latlngs);
+      } else if (g.center_lat != null && g.center_lng != null && g.radius_m != null) {
+        L.circle([g.center_lat, g.center_lng], {
+          radius: g.radius_m,
+          color: g.color,
+          fillColor: g.color,
+          fillOpacity: 0.12,
+          weight: 2,
+        })
+          .bindPopup(`<strong>${g.name}</strong><br/>${g.radius_m} m`)
+          .addTo(layer);
+        bounds.push([g.center_lat, g.center_lng]);
+      }
     });
+
+    if (draftPoints && draftPoints.length > 0) {
+      const pts = draftPoints.map((p) => [p.lat, p.lng] as L.LatLngExpression);
+      pts.forEach((p, i) => {
+        L.circleMarker(p, { radius: 5, color: "#ff8e42", fillOpacity: 1 })
+          .bindTooltip(String(i + 1), { permanent: true, direction: "top", offset: [0, -6] })
+          .addTo(layer);
+      });
+      if (pts.length > 1) {
+        L.polyline(pts, { color: "#ff8e42", weight: 2, dashArray: "6 4" }).addTo(layer);
+      }
+      if (pts.length > 2) {
+        L.polygon(pts, {
+          color: "#ff8e42",
+          fillColor: "#ff8e42",
+          fillOpacity: 0.08,
+          weight: 1,
+          dashArray: "6 4",
+        }).addTo(layer);
+      }
+      bounds.push(...pts);
+    }
 
     if (track && track.length > 1) {
       const pts = track.map((p) => [p.lat, p.lng] as L.LatLngExpression);
@@ -129,7 +173,7 @@ export default function LeafletMap({
     if (bounds.length > 0) {
       map.fitBounds(L.latLngBounds(bounds).pad(0.25), { maxZoom: 15 });
     }
-  }, [vehicles, geofences, track]);
+  }, [vehicles, geofences, track, draftPoints]);
 
   return <div ref={nodeRef} className={className} />;
 }
