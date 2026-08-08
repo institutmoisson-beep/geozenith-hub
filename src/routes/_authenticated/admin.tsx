@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -47,6 +48,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate, statusLabel } from "@/lib/msn";
+import { syncTraccar } from "@/lib/tracking.functions";
+import { sendTestWhatsApp } from "@/lib/whatsapp.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
@@ -143,11 +146,15 @@ function SystemSettingsTab() {
   const qc = useQueryClient();
   const [syncing, setSyncing] = useState(false);
   const [rotating, setRotating] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const runSendTest = useServerFn(sendTestWhatsApp);
+  const runSyncTraccar = useServerFn(syncTraccar);
   const [form, setForm] = useState({
     traccar_url: "",
     traccar_username: "",
     traccar_token: "",
     whatsapp_provider_url: "",
+    whatsapp_instance_name: "",
     whatsapp_instance_token: "",
     whatsapp_alert_number: "",
     whatsapp_enabled: false,
@@ -167,6 +174,7 @@ function SystemSettingsTab() {
         traccar_username: settings.traccar_username ?? "",
         traccar_token: settings.traccar_token ?? "",
         whatsapp_provider_url: settings.whatsapp_provider_url ?? "",
+        whatsapp_instance_name: settings.whatsapp_instance_name ?? "",
         whatsapp_instance_token: settings.whatsapp_instance_token ?? "",
         whatsapp_alert_number: settings.whatsapp_alert_number ?? "",
         whatsapp_enabled: settings.whatsapp_enabled,
@@ -190,6 +198,7 @@ function SystemSettingsTab() {
       traccar_username: form.traccar_username || null,
       traccar_token: form.traccar_token || null,
       whatsapp_provider_url: form.whatsapp_provider_url || null,
+      whatsapp_instance_name: form.whatsapp_instance_name || null,
       whatsapp_instance_token: form.whatsapp_instance_token || null,
       whatsapp_alert_number: form.whatsapp_alert_number || null,
       whatsapp_enabled: form.whatsapp_enabled,
@@ -213,18 +222,27 @@ function SystemSettingsTab() {
   async function runSync() {
     setSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("sync-traccar", {
-        body: { source: "manual" },
-      });
-      if (error) throw error;
+      const result = await runSyncTraccar({ data: undefined });
       toast.success(
-        `Synchronisation : ${data.devices} boîtier(s), ${data.updated} véhicule(s), ${data.alerts} alerte(s).`,
+        `Synchronisation : ${result.devices} boîtier(s), ${result.updated} véhicule(s), ${result.alerts} alerte(s).`,
       );
       qc.invalidateQueries();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Échec de la synchronisation");
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function sendTest() {
+    setTesting(true);
+    try {
+      await runSendTest({ data: undefined });
+      toast.success("Message de test envoyé — vérifiez le numéro d'alerte plateforme.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Échec de l'envoi du message de test");
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -313,7 +331,7 @@ function SystemSettingsTab() {
           <CardContent>
             <form onSubmit={save} className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="s-wa-url">URL de l'instance Evolution API</Label>
+                <Label htmlFor="s-wa-url">URL du serveur Evolution API</Label>
                 <Input
                   id="s-wa-url"
                   placeholder="https://evolution.example.com"
@@ -322,7 +340,16 @@ function SystemSettingsTab() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="s-wa-token">Jeton d'instance</Label>
+                <Label htmlFor="s-wa-instance">Nom de l'instance</Label>
+                <Input
+                  id="s-wa-instance"
+                  placeholder="msn-tracker"
+                  value={form.whatsapp_instance_name}
+                  onChange={(e) => setForm({ ...form, whatsapp_instance_name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="s-wa-token">Jeton d'instance (apikey)</Label>
                 <Input
                   id="s-wa-token"
                   type="password"
@@ -349,9 +376,14 @@ function SystemSettingsTab() {
                   onCheckedChange={(v) => setForm({ ...form, whatsapp_enabled: v })}
                 />
               </div>
-              <Button type="submit" className="w-full">
-                Enregistrer
-              </Button>
+              <div className="flex gap-2">
+                <Button type="submit" className="flex-1">
+                  Enregistrer
+                </Button>
+                <Button type="button" variant="outline" onClick={sendTest} disabled={testing}>
+                  {testing ? "Envoi…" : "Envoyer un test"}
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
@@ -409,8 +441,8 @@ function SystemSettingsTab() {
           <CardTitle>Synchronisation GPS automatique</CardTitle>
           <CardDescription>
             Un job planifié (toutes les minutes) vérifie s'il est temps de synchroniser, puis
-            appelle une fonction Edge Supabase indépendante du serveur applicatif — la flotte se met
-            à jour toute seule, sans bouton à cliquer.
+            appelle un point d'entrée sécurisé de votre application — la flotte se met à jour toute
+            seule, sans bouton à cliquer.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -449,11 +481,12 @@ function SystemSettingsTab() {
           </div>
 
           <div className="space-y-1.5 border-t border-border pt-4">
-            <Label htmlFor="s-fn-url">URL de la fonction Edge de synchronisation</Label>
+            <Label htmlFor="s-fn-url">URL du point d'entrée de synchronisation (webhook)</Label>
             <div className="flex gap-2">
               <Input
                 id="s-fn-url"
                 className="font-mono text-xs"
+                placeholder="https://votre-app.lovable.app/api/public/hooks/sync-traccar"
                 value={form.sync_function_url}
                 onChange={(e) => setForm({ ...form, sync_function_url: e.target.value })}
               />
@@ -462,14 +495,16 @@ function SystemSettingsTab() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Pré-remplie automatiquement pour ce projet Supabase. Ne la modifiez que si vous
-              redéployez la fonction <code>sync-traccar</code> ailleurs.
+              L'adresse publique de votre application, suivie de{" "}
+              <code>/api/public/hooks/sync-traccar</code>. C'est cette URL que le job planifié
+              appelle toutes les minutes — vérifiez qu'elle correspond bien à votre domaine actuel
+              (Lovable ou domaine personnalisé) après chaque changement de domaine.
             </p>
           </div>
 
           <div className="flex items-center justify-between border-t border-border pt-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <KeyRound className="h-4 w-4" /> Secret interne cron ↔ fonction Edge
+              <KeyRound className="h-4 w-4" /> Secret interne cron ↔ webhook de synchro
             </div>
             <Button
               type="button"
