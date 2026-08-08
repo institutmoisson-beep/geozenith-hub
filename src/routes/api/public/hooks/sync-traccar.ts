@@ -38,14 +38,41 @@ export const Route = createFileRoute("/api/public/hooks/sync-traccar")({
           return Response.json({ success: true, ...result });
         } catch (error) {
           const message = error instanceof Error ? error.message : "Erreur inconnue";
-          await supabaseAdmin
+          const { data: freshSettings } = await supabaseAdmin
             .from("system_settings")
             .update({
               last_sync_at: new Date().toISOString(),
               last_sync_status: "error",
               last_sync_error: message,
             })
-            .eq("id", true);
+            .eq("id", true)
+            .select("*")
+            .maybeSingle();
+
+          // Notifie tous les admins dans leur boîte de notifications (son inclus).
+          const { data: admins } = await supabaseAdmin
+            .from("user_roles")
+            .select("user_id")
+            .eq("role", "admin");
+          if (admins && admins.length > 0) {
+            await supabaseAdmin.from("alerts").insert(
+              admins.map((a) => ({
+                user_id: a.user_id,
+                vehicle_id: null,
+                type: "sync_error",
+                severity: "warning",
+                message: `Échec de la synchronisation Traccar automatique : ${message.slice(0, 200)}`,
+              })) as never[],
+            );
+          }
+          if (freshSettings) {
+            const { notifyPlatformWhatsApp } = await import("@/lib/whatsapp.server");
+            await notifyPlatformWhatsApp(
+              freshSettings,
+              `⚠️ MSN Tracker\nLa synchronisation Traccar automatique a échoué : ${message.slice(0, 200)}`,
+            );
+          }
+
           console.error("[sync-traccar]", message);
           return Response.json({ success: false, error: message }, { status: 500 });
         }
